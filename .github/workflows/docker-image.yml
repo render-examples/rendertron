@@ -10,7 +10,8 @@ on:
     # Build daily at 12:30
     - cron: "30 12 * * *"
   push:
-    branches: ["latest", "main"]
+    branches:
+      - main
     # Publish semver tags as releases.
     tags: ["v*.*.*"]
 
