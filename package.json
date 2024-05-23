@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/turnout-labs/portal",
   "engines": {
-    "node": ">=7 <11"
+    "node": "v10.24.1"
   },
   "main": "build/portal.js",
   "types": "build/portal.d.ts",
@@ -32,13 +32,14 @@
     "koa": "^2.5.2",
     "koa-bodyparser": "^4.2.1",
     "koa-compress": "^3.0.0",
+    "koa-logger": "^3.2.0",
     "koa-route": "^3.2.0",
     "koa-send": "^5.0.0",
     "koa-static": "^5.0.0",
-    "koa-logger": "^3.2.0",
     "performance-now": "^2.1.0",
     "progress-bar-element": "^2.0.1",
-    "puppeteer": "^1.7.0",
+    "puppeteer": "^1.20.0",
+    "puppeteer-core": "^22.9.0",
     "semver": "^5.5.1",
     "uuid": "^3.2.1"
   },

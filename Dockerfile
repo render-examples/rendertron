@@ -1,5 +1,4 @@
-FROM --platform=linux/amd64 node:10-slim
-
+FROM --platform=linux/amd64 node:10.24.1-slim
 
 # # install chrome dependencies 
 # RUN apt-get update && apt-get install -y wget gnupg
@@ -8,7 +7,6 @@ FROM --platform=linux/amd64 node:10-slim
 #   apt-get update && \
 #   apt-get install google-chrome-stable -y --no-install-recommends && \
 #   rm -rf /var/lib/apt/lists/*
-
 
 # Build the app
 WORKDIR /app
@@ -25,7 +23,8 @@ ENV NODE_ENV=production
 RUN npm prune
 RUN rm -r ./src
 
-RUN npm i puppeteer puppeteer-core
+# RUN npm i puppeteer puppeteer-core
+RUN npx @puppeteer/browsers install chrome@stable
 
 # Run the app
 EXPOSE 3000
