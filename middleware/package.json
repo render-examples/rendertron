@@ -1,7 +1,7 @@
 {
-  "name": "rendertron-middleware",
+  "name": "portal-middleware",
   "version": "0.1.5",
-  "description": "Express middleware for the rendertron service.",
+  "description": "Express middleware for the portal service.",
   "engines": {
     "node": ">=6"
   },

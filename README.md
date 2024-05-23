@@ -1,22 +1,22 @@
-# Rendertron [![Build status](https://travis-ci.org/GoogleChrome/rendertron.svg?branch=master)](https://travis-ci.org/GoogleChrome/rendertron) [![NPM rendertron package](https://img.shields.io/npm/v/rendertron.svg)](https://npmjs.org/package/rendertron)
+# portal [![Build status](https://travis-ci.org/GoogleChrome/portal.svg?branch=master)](https://travis-ci.org/GoogleChrome/portal) [![NPM portal package](https://img.shields.io/npm/v/portal.svg)](https://npmjs.org/package/portal)
 
-> Rendertron is a headless Chrome rendering solution designed to render & serialise web pages on the fly.
+> portal is a headless Chrome rendering solution designed to render & serialise web pages on the fly.
 
 #### :hammer: Built with [Puppeteer](https://github.com/GoogleChrome/puppeteer)
 #### :cloud: Easy deployment to Render
 #### :mag: Improves SEO
 
-Rendertron is designed to enable your Progressive Web App (PWA) to serve the correct
-content to any bot that doesn't render or execute JavaScript. Rendertron runs as a
-standalone HTTP server. Rendertron renders requested pages using Headless Chrome,
+portal is designed to enable your Progressive Web App (PWA) to serve the correct
+content to any bot that doesn't render or execute JavaScript. portal runs as a
+standalone HTTP server. portal renders requested pages using Headless Chrome,
 [auto-detecting](#auto-detecting-loading-function) when your PWA has completed loading
-and serializes the response back to the original request. To use Rendertron, your application
-configures [middleware](#middleware) to determine whether to proxy a request to Rendertron.
-Rendertron is compatible with all client side technologies, including [web components](#web-components).
+and serializes the response back to the original request. To use portal, your application
+configures [middleware](#middleware) to determine whether to proxy a request to portal.
+portal is compatible with all client side technologies, including [web components](#web-components).
 
 **Demo endpoint**
 
-A demo Rendertron service is available at https://rendertron.onrender.com/. It is not designed
+A demo portal service is available at https://portal.onrender.com/. It is not designed
 to be used as a production endpoint. You can use it, but there are no uptime guarantees.
 
 ## Contents
@@ -42,12 +42,12 @@ to be used as a production endpoint. You can use it, but there are no uptime gua
 Once you have the service up and running, you'll need to implement the differential serving
 layer. This checks the user agent to determine whether prerendering is required.
 
-This is a list of middleware available to use with the Rendertron service:
+This is a list of middleware available to use with the portal service:
  * [Express.js middleware](/middleware)
  * [Firebase functions](https://github.com/justinribeiro/pwa-firebase-functions-botrender) (Community maintained)
- * [ASP.net core middleware](https://github.com/galamai/AspNetCore.Rendertron) (Community maintained)
+ * [ASP.net core middleware](https://github.com/galamai/AspNetCore.portal) (Community maintained)
 
-Rendertron is also compatible with [prerender.io middleware](https://prerender.io/documentation/install-middleware).
+portal is also compatible with [prerender.io middleware](https://prerender.io/documentation/install-middleware).
 Note: the user agent lists differ there.
 
 ## API
@@ -88,7 +88,7 @@ for available options. You cannot specify the `type` (defaults to `jpeg`) and
 When setting query parameters as part of your URL, ensure they are encoded correctly. In JS,
 this would be `encodeURIComponent(myURLWithParams)`. For example to specify `page=home`:
 ```
-https://rendertron.onrender.com/render/http://my.domain/%3Fpage%3Dhome
+https://portal.onrender.com/render/http://my.domain/%3Fpage%3Dhome
 ```
 
 ### Auto detecting loading function
@@ -107,10 +107,10 @@ is required for web components.
 If you are using web components v0 (deprecated), you will need to enable Shady DOM to
 render correctly. In Polymer 1.x, which uses web components v0, Shady DOM is enabled by default.
 If you are using Shadow DOM, override this by setting the query parameter `dom=shady` when
-directing requests to the Rendertron service.
+directing requests to the portal service.
 
 If you are using web components v1 and either `webcomponents-lite.js` or `webcomponents-loader.js`,
-set the query parameter `wc-inject-shadydom=true` when directing requests to the Rendertron
+set the query parameter `wc-inject-shadydom=true` when directing requests to the portal
 service. This renderer service will force the necessary polyfills to be loaded and enabled.
 
 ### Status codes
@@ -121,14 +121,14 @@ set the HTTP status returned by the rendering service by adding a meta tag.
 ```
 
 ## Running locally
-To install Rendertron and run it locally, first install Rendertron:
+To install portal and run it locally, first install portal:
 ```bash
-npm install -g rendertron
+npm install -g portal
 ```
 
-With Chrome installed on your machine run the Rendertron CLI:
+With Chrome installed on your machine run the portal CLI:
 ```bash
-rendertron
+portal
 ```
 
 ## Installing & deploying
@@ -136,8 +136,8 @@ rendertron
 ### Building
 Clone and install dependencies:
 ```bash
-git clone https://github.com/GoogleChrome/rendertron.git
-cd rendertron
+git clone https://github.com/GoogleChrome/portal.git
+cd portal
 npm install
 npm run build
 ```
@@ -154,7 +154,7 @@ See https://render.com/docs/deploy-puppeteer-node/
 
 
 ### Deploying using Docker
-Rendertron no longer includes a Docker file. Instead, refer to
+portal no longer includes a Docker file. Instead, refer to
 [Puppeteer documentation](https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-puppeteer-in-docker)
 on how to deploy run headless Chrome in Docker.
 
@@ -163,7 +163,7 @@ When deploying the service, set configuration variables by including a `config.j
 root. Available configuration options:
  * `datastoreCache` default `false` - set to `true` to enable caching on Google Cloud using datastore
  * `timeout` default `10000` - set the timeout used to render the target page. 
- * `port` default `3000` - set the port to use for running and listening the rendertron service. Note if process.env.PORT is set, it will be used instead.
+ * `port` default `3000` - set the port to use for running and listening the portal service. Note if process.env.PORT is set, it will be used instead.
  * `width` default `1000` - set the width (resolution) to be used for rendering the page.
  * `height` default `1000` - set the height (resolution) to be used for rendering the page.
 

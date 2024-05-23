@@ -14,30 +14,30 @@
  * the License.
  */
 
-import * as express from 'express';
-import * as request from 'request';
+import * as express from "express";
+import * as request from "request";
 
 /**
  * A default set of user agent patterns for bots/crawlers that do not perform
  * well with pages that require JavaScript.
  */
 export const botUserAgents = [
-  'Baiduspider',
-  'bingbot',
-  'Embedly',
-  'facebookexternalhit',
-  'LinkedInBot',
-  'outbrain',
-  'pinterest',
-  'quora link preview',
-  'rogerbot',
-  'showyoubot',
-  'Slackbot',
-  'TelegramBot',
-  'Twitterbot',
-  'vkShare',
-  'W3C_Validator',
-  'WhatsApp',
+  "Baiduspider",
+  "bingbot",
+  "Embedly",
+  "facebookexternalhit",
+  "LinkedInBot",
+  "outbrain",
+  "pinterest",
+  "quora link preview",
+  "rogerbot",
+  "showyoubot",
+  "Slackbot",
+  "TelegramBot",
+  "Twitterbot",
+  "vkShare",
+  "W3C_Validator",
+  "WhatsApp",
 ];
 
 /**
@@ -45,11 +45,47 @@ export const botUserAgents = [
  * proxied.
  */
 const staticFileExtensions = [
-  'ai', 'avi', 'css', 'dat', 'dmg', 'doc', 'doc', 'exe', 'flv',
-  'gif', 'ico', 'iso', 'jpeg', 'jpg', 'js', 'less', 'm4a', 'm4v',
-  'mov', 'mp3', 'mp4', 'mpeg', 'mpg', 'pdf', 'png', 'ppt', 'psd',
-  'rar', 'rss', 'svg', 'swf', 'tif', 'torrent', 'ttf', 'txt', 'wav',
-  'wmv', 'woff', 'xls', 'xml', 'zip',
+  "ai",
+  "avi",
+  "css",
+  "dat",
+  "dmg",
+  "doc",
+  "doc",
+  "exe",
+  "flv",
+  "gif",
+  "ico",
+  "iso",
+  "jpeg",
+  "jpg",
+  "js",
+  "less",
+  "m4a",
+  "m4v",
+  "mov",
+  "mp3",
+  "mp4",
+  "mpeg",
+  "mpg",
+  "pdf",
+  "png",
+  "ppt",
+  "psd",
+  "rar",
+  "rss",
+  "svg",
+  "swf",
+  "tif",
+  "torrent",
+  "ttf",
+  "txt",
+  "wav",
+  "wmv",
+  "woff",
+  "xls",
+  "xml",
+  "zip",
 ];
 
 /**
@@ -57,7 +93,7 @@ const staticFileExtensions = [
  */
 export interface Options {
   /**
-   * Base URL of the Rendertron proxy service. Required.
+   * Base URL of the portal proxy service. Required.
    */
   proxyUrl: string;
 
@@ -86,42 +122,47 @@ export interface Options {
 
 /**
  * Create a new Express middleware function that proxies requests to a
- * Rendertron bot rendering service.
+ * portal bot rendering service.
  */
 export function makeMiddleware(options: Options): express.Handler {
   if (!options || !options.proxyUrl) {
-    throw new Error('Must set options.proxyUrl.');
+    throw new Error("Must set options.proxyUrl.");
   }
   let proxyUrl = options.proxyUrl;
-  if (!proxyUrl.endsWith('/')) {
-    proxyUrl += '/';
+  if (!proxyUrl.endsWith("/")) {
+    proxyUrl += "/";
   }
   const userAgentPattern =
-    options.userAgentPattern || new RegExp(botUserAgents.join('|'), 'i');
-  const excludeUrlPattern = options.excludeUrlPattern ||
-    new RegExp(`\\.(${staticFileExtensions.join('|')})$`, 'i');
+    options.userAgentPattern || new RegExp(botUserAgents.join("|"), "i");
+  const excludeUrlPattern =
+    options.excludeUrlPattern ||
+    new RegExp(`\\.(${staticFileExtensions.join("|")})$`, "i");
   const injectShadyDom = !!options.injectShadyDom;
-  // The Rendertron service itself has a hard limit of 10 seconds to render, so
+  // The portal service itself has a hard limit of 10 seconds to render, so
   // let's give a little more time than that by default.
-  const timeout = options.timeout || 11000;  // Milliseconds.
+  const timeout = options.timeout || 11000; // Milliseconds.
 
-  return function rendertronMiddleware(req, res, next) {
-    const ua = req.headers['user-agent'];
-    if (ua === undefined || !userAgentPattern.test(ua) ||
-      excludeUrlPattern.test(req.path)) {
+  return function portalMiddleware(req, res, next) {
+    const ua = req.headers["user-agent"];
+    if (
+      ua === undefined ||
+      !userAgentPattern.test(ua) ||
+      excludeUrlPattern.test(req.path)
+    ) {
       next();
       return;
     }
     const incomingUrl =
-      req.protocol + '://' + req.get('host') + req.originalUrl;
+      req.protocol + "://" + req.get("host") + req.originalUrl;
     let renderUrl = proxyUrl + encodeURIComponent(incomingUrl);
     if (injectShadyDom) {
-      renderUrl += '?wc-inject-shadydom=true';
+      renderUrl += "?wc-inject-shadydom=true";
     }
     request({ url: renderUrl, timeout }, (e) => {
       if (e) {
         console.error(
-          `[rendertron middleware] ${e.code} error fetching ${renderUrl}`);
+          `[portal middleware] ${e.code} error fetching ${renderUrl}`
+        );
         next();
       }
     }).pipe(res);

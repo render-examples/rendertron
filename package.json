@@ -1,20 +1,20 @@
 {
-  "name": "rendertron",
-  "version": "2.0.1",
-  "description": "Renders webpages using headless Chrome for usage by bots",
+  "name": "portal",
+  "version": "3.0.1",
+  "description": "Renders webpages using headless Chrome for usage by bots based of portal",
   "license": "Apache-2.0",
-  "repository": "https://github.com/GoogleChrome/rendertron",
+  "repository": "https://github.com/turnout-labs/portal",
   "engines": {
     "node": ">=7 <11"
   },
-  "main": "build/rendertron.js",
-  "types": "build/rendertron.d.ts",
-  "bin": "bin/rendertron",
+  "main": "build/portal.js",
+  "types": "build/portal.d.ts",
+  "bin": "bin/portal.js",
   "scripts": {
     "build": "tsc",
     "prepack": "npm run build",
-    "start": "node build/rendertron.js",
-    "format": "find src -name '*.ts' | xargs clang-format --style=file -i",
+    "start": "node build/portal.js",
+    "format": "find *.ts | xargs clang-format --style=file -i",
     "lint": "tslint --project . --format stylish",
     "monitor": "nodemon",
     "monitor-inspect": "nodemon --inspect src/main.js",
@@ -55,6 +55,7 @@
     "@types/supertest": "^2.0.4",
     "ava": "1.0.0-beta.6",
     "nodemon": "^1.18.3",
+    "resolve-tspaths": "^0.8.19",
     "supertest": "^3.0.0",
     "tslint": "^5.11.0",
     "typescript": "^3.0.1"
