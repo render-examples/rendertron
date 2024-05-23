@@ -1,23 +1,20 @@
-# portal [![Build status](https://travis-ci.org/GoogleChrome/portal.svg?branch=master)](https://travis-ci.org/GoogleChrome/portal) [![NPM portal package](https://img.shields.io/npm/v/portal.svg)](https://npmjs.org/package/portal)
+# Portal
 
-> portal is a headless Chrome rendering solution designed to render & serialise web pages on the fly.
+> Portal is a headless Chrome rendering solution designed to render & serialise web pages for use by agents
 
-#### :hammer: Built with [Puppeteer](https://github.com/GoogleChrome/puppeteer)
-#### :cloud: Easy deployment to Render
-#### :mag: Improves SEO
+This repo is a fork of Rendertron, upgraded to support the latest versions of puppeteer, chrome-stable, and container deployments.
 
-portal is designed to enable your Progressive Web App (PWA) to serve the correct
-content to any bot that doesn't render or execute JavaScript. portal runs as a
-standalone HTTP server. portal renders requested pages using Headless Chrome,
-[auto-detecting](#auto-detecting-loading-function) when your PWA has completed loading
-and serializes the response back to the original request. To use portal, your application
-configures [middleware](#middleware) to determine whether to proxy a request to portal.
-portal is compatible with all client side technologies, including [web components](#web-components).
+#### Built with
+🤖 Puppeteer • 📝 Typescript • 🚢 Docker
+
+Portal renders requested pages using Headless Chrome, [auto-detecting](#auto-detecting-loading-function) when your PWA has completed loading and serializes the response back to the original request. To use portal, your application
+configures [middleware](#middleware) to determine whether to proxy a request to portal. Portal is compatible with all client side technologies, including [web components](#web-components).
+
+---
 
 **Demo endpoint**
 
-A demo portal service is available at https://portal.onrender.com/. It is not designed
-to be used as a production endpoint. You can use it, but there are no uptime guarantees.
+A demo portal service is available at https://portal.stuntdouble.io. It is not designed to be used as a production endpoint. You can use it, but there are no uptime guarantees.
 
 ## Contents
 - [Middleware](#middleware)
@@ -47,7 +44,7 @@ This is a list of middleware available to use with the portal service:
  * [Firebase functions](https://github.com/justinribeiro/pwa-firebase-functions-botrender) (Community maintained)
  * [ASP.net core middleware](https://github.com/galamai/AspNetCore.portal) (Community maintained)
 
-portal is also compatible with [prerender.io middleware](https://prerender.io/documentation/install-middleware).
+Portal is also compatible with [prerender middleware](https://prerender.io/).
 Note: the user agent lists differ there.
 
 ## API
@@ -59,8 +56,8 @@ GET /render/<url>
 
 The `render` endpoint will render your page and serialize your page. Options are
 specified as query parameters:
- * `mobile` defaults to `false`. Enable by passing `?mobile` to request the
-  mobile version of your site.
+ * `mobile` defaults to `false`.  
+ * `?mobile` appended will request the mobile version.
 
 ### Screenshot
 ```
@@ -68,8 +65,7 @@ GET /screenshot/<url>
 POST /screenshot/<url>
 ```
 
-The `screenshot` endpoint can be used to verify that your page is rendering
-correctly.
+The `screenshot` endpoint can be used to verify that your page is rendering correctly.
 
 Both endpoints support the following query parameters:
  * `width` defaults to `1000` - specifies viewport width.
@@ -78,9 +74,8 @@ Both endpoints support the following query parameters:
   mobile version of your site.
 
 Additional options are available as a JSON string in the `POST` body. See
-[Puppeteer documentation](https://github.com/GoogleChrome/puppeteer/blob/v1.6.0/docs/api.md#pagescreenshotoptions)
-for available options. You cannot specify the `type` (defaults to `jpeg`) and
-`encoding` (defaults to `binary`) parameters.
+[Puppeteer documentation](https://github.com/GoogleChrome/puppeteer)
+for available options. You cannot specify the `type` (defaults to `jpeg`) and `encoding` (defaults to `binary`) parameters.
 
 ## FAQ
 
@@ -88,7 +83,7 @@ for available options. You cannot specify the `type` (defaults to `jpeg`) and
 When setting query parameters as part of your URL, ensure they are encoded correctly. In JS,
 this would be `encodeURIComponent(myURLWithParams)`. For example to specify `page=home`:
 ```
-https://portal.onrender.com/render/http://my.domain/%3Fpage%3Dhome
+https://portal.stuntdouble.io/render/http://my.domain/%3Fpage%3Dhome
 ```
 
 ### Auto detecting loading function
@@ -121,22 +116,22 @@ set the HTTP status returned by the rendering service by adding a meta tag.
 ```
 
 ## Running locally
-To install portal and run it locally, first install portal:
+To install puppeteer and run it locally, first install puppeteer:
 ```bash
-npm install -g portal
+npm install -g puppeteer
 ```
 
-With Chrome installed on your machine run the portal CLI:
+<!-- With Chrome installed on your machine run the portal CLI:
 ```bash
 portal
-```
+``` -->
 
 ## Installing & deploying
 
 ### Building
 Clone and install dependencies:
 ```bash
-git clone https://github.com/GoogleChrome/portal.git
+git clone https://github.com/turnout-labs/portal.git
 cd portal
 npm install
 npm run build
@@ -148,15 +143,13 @@ With a local instance of Chrome installed, you can start the server locally:
 npm run start
 ```
 
-### Deploying to Render
-
+### Building docker image
+The indcluded docker file builds a version with chrome-stable bundled in the install process. Accepts PORT as an env variable to adjust the listening port.
 See https://render.com/docs/deploy-puppeteer-node/
+```bash
+docker build . -t turnout-labs/portal
+```
 
-
-### Deploying using Docker
-portal no longer includes a Docker file. Instead, refer to
-[Puppeteer documentation](https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-puppeteer-in-docker)
-on how to deploy run headless Chrome in Docker.
 
 ### Config
 When deploying the service, set configuration variables by including a `config.json` in the

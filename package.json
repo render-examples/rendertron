@@ -16,8 +16,8 @@
     "start": "node build/portal.js",
     "format": "find *.ts | xargs clang-format --style=file -i",
     "lint": "tslint --project . --format stylish",
-    "monitor": "nodemon",
-    "monitor-inspect": "nodemon --inspect src/main.js",
+    "monitor": "tsx ./src/portal.ts",
+    "monitor-inspect": "tsx --inspect src/portal.js",
     "test": "(cd test-resources && npm install) && npm run build && ava build/test/app-test.js --timeout 5s",
     "start-emulator": "(gcloud beta emulators datastore start --no-store-on-disk --project emulator-project &) 2>&1 | grep -m1 'now running'",
     "test-cache": "npm run start-emulator && $(gcloud beta emulators datastore env-init) && export GCLOUD_PROJECT='emulator-project' && ava build/test/datastore-cache-test.js"
