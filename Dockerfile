@@ -21,10 +21,8 @@ RUN npm install
 COPY . ./
 RUN npm run build
 
-# Remove dev dependencies
+# set production
 ENV NODE_ENV=production
-RUN npm prune
-RUN rm -r ./src
 
 # Run the app
 ENV PORT=$PORT
