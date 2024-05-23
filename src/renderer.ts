@@ -1,6 +1,5 @@
-import * as puppeteer from "puppeteer";
+import type { Browser, HTTPResponse } from "puppeteer";
 import * as url from "url";
-
 import { Config } from "./config";
 
 type SerializedResponse = {
@@ -21,10 +20,10 @@ const MOBILE_USERAGENT =
  * APIs that are able to handle web components and PWAs.
  */
 export class Renderer {
-  private browser: puppeteer.Browser;
+  private browser: Browser;
   private config: Config;
 
-  constructor(browser: puppeteer.Browser, config: Config) {
+  constructor(browser: Browser, config: Config) {
     this.browser = browser;
     this.config = config;
   }
@@ -87,12 +86,12 @@ export class Renderer {
     page.evaluateOnNewDocument("ShadyDOM = {force: true}");
     page.evaluateOnNewDocument("ShadyCSS = {shimcssproperties: true}");
 
-    let response: puppeteer.Response | null = null;
+    let response: HTTPResponse | null = null;
     // Capture main frame response. This is used in the case that rendering
     // times out, which results in puppeteer throwing an error. This allows us
     // to return a partial response for what was able to be rendered in that
     // time frame.
-    page.addListener("response", (r: puppeteer.Response) => {
+    page.on("response", (r: HTTPResponse) => {
       if (!response) {
         response = r;
       }
@@ -156,7 +155,7 @@ export class Renderer {
     const result = await page.evaluate("document.firstElementChild.outerHTML");
 
     await page.close();
-    return { status: statusCode, content: result };
+    return { status: statusCode, content: result as string };
   }
 
   async screenshot(
@@ -179,7 +178,7 @@ export class Renderer {
       page.setUserAgent(MOBILE_USERAGENT);
     }
 
-    let response: puppeteer.Response | null = null;
+    let response: HTTPResponse | null = null;
 
     try {
       // Navigate to page. Wait until there are no oustanding network requests.

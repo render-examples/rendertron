@@ -5,8 +5,9 @@ import * as route from "koa-route";
 import * as koaSend from "koa-send";
 import * as koaLogger from "koa-logger";
 import * as path from "path";
-import * as puppeteer from "puppeteer";
 import * as url from "url";
+
+import puppeteer from "puppeteer";
 
 import { Renderer, ScreenshotError } from "./renderer";
 import { Config, ConfigManager } from "./config";
@@ -48,10 +49,10 @@ export class Portal {
     );
 
     // Optionally enable cache for rendering requests.
-    if (this.config.datastoreCache) {
-      const { DatastoreCache } = await import("./datastore-cache");
-      this.app.use(new DatastoreCache().middleware());
-    }
+    // if (this.config.datastoreCache) {
+    //   const { DatastoreCache } = await import("./datastore-cache");
+    //   this.app.use(new DatastoreCache().middleware());
+    // }
 
     this.app.use(
       route.get("/render/:url(.*)", this.handleRenderRequest.bind(this))

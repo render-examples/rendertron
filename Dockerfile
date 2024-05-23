@@ -1,21 +1,21 @@
-# ****************
-# Installer
-# ****************
-FROM --platform=linux/amd64 node:10.24.1-slim as installer
+FROM --platform=linux/amd64 node:20-bookworm-slim as release
+
+# Install Google Chrome Stable
+RUN apt-get update && apt-get install -y wget gnupg
+RUN wget --quiet --output-document=- https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /etc/apt/trusted.gpg.d/google-archive.gpg && \
+  sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' && \
+  apt-get update && \
+  apt-get install google-chrome-stable -y --no-install-recommends && \
+  rm -rf /var/lib/apt/lists/*
+
+# Skip chromium download
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 WORKDIR /app
 
-# Insall dependencies
+# Insall dependencies first
 COPY package*.json ./
-RUN npm i
-
-# ****************
-# Build and Serve
-# ****************
-FROM --platform=linux/amd64 node:10.24.1-slim as release
-WORKDIR /app
-
-# Copying all the contents from previous stage(used - - from) into current stage
-COPY --from=installer /app /app/
+RUN npm install
 
 # Copy the app
 COPY . ./
@@ -26,7 +26,8 @@ ENV NODE_ENV=production
 RUN npm prune
 RUN rm -r ./src
 
-
 # Run the app
-EXPOSE 3000
+ENV PORT=$PORT
+EXPOSE $PORT
+
 CMD ["npm", "run", "start"]
