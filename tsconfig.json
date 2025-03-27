@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "es2022",
     "module": "commonjs",
     "strict": true,
     "noUnusedLocals": true,
@@ -9,12 +9,15 @@
     "declaration": true,
     "sourceMap": true,
     "lib": [
-      "es2017",
+      "es2022",
       "esnext.asynciterable",
       "dom"
     ],
     "rootDir": "./src",
-    "outDir": "./build"
+    "outDir": "./build",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
     "./src/**/*.ts"

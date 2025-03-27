@@ -24,22 +24,53 @@ import * as path from 'path';
 
 const CONFIG_PATH = path.resolve(__dirname, '../config.json');
 
-
-export type Config = {
-    datastoreCache: boolean;
+export interface Config {
+    host: string;
+    port: number;
+    width: number;
+    height: number;
     timeout: number;
-    port: string;
-    width:number;
-    height:number;
-};
+    reqHeaders: {[key: string]: string};
+    headers: {[key: string]: string};
+    puppeteerArgs: string[];
+    renderTimeout: number;
+    maxRenderTime: number;
+    datastoreCache: boolean;
+    closeBrowser: boolean;
+    restrictedUrlPattern: string[];
+    apiKey: string;
+}
 
 export class ConfigManager {
     public static config: Config = {
-        datastoreCache: false,
-        timeout: 10000,
-        port: '3000',
+        host: '0.0.0.0',
+        port: 3000,
         width: 1000,
         height: 1000,
+        timeout: 10000,
+        reqHeaders: {},
+        headers: {},
+        puppeteerArgs: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--disable-gpu',
+            '--window-size=1920,1080',
+            '--hide-scrollbars',
+            '--disable-notifications',
+            '--disable-extensions',
+            '--force-device-scale-factor=1',
+            '--disable-infobars',
+            '--disable-web-security',
+            '--disable-features=IsolateOrigins,site-per-process'
+        ],
+        renderTimeout: 10000,
+        maxRenderTime: 30000,
+        datastoreCache: false,
+        closeBrowser: false,
+        restrictedUrlPattern: [],
+        apiKey: process.env.RENDERTRON_API_KEY || ''
     };
 
     static async getConfiguration(): Promise<Config> {

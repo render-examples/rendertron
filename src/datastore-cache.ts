@@ -20,8 +20,7 @@
 'use strict';
 
 import {DatastoreKey} from '@google-cloud/datastore/entity';
-import * as Koa from 'koa';
-
+import {Request, Response, NextFunction} from 'express';
 import Datastore = require('@google-cloud/datastore');
 
 type CacheContent = {
@@ -34,6 +33,8 @@ type CacheContent = {
 type DatastoreObject = {
   [Datastore.KEY]: DatastoreKey
 };
+
+type Headers = Record<string, string | string[] | undefined>;
 
 export class DatastoreCache {
   datastore: Datastore = new Datastore();
@@ -50,7 +51,7 @@ export class DatastoreCache {
     // delete.
   }
 
-  async cacheContent(key: DatastoreKey, headers: {}, payload: Buffer) {
+  async cacheContent(key: DatastoreKey, headers: Headers, payload: Buffer) {
     const cacheDurationMinutes = 60 * 24;
     const now = new Date();
     const entity = {
@@ -84,27 +85,30 @@ export class DatastoreCache {
 
     return async function(
                this: DatastoreCache,
-               ctx: Koa.Context,
-               next: () => Promise<unknown>) {
+               req: Request,
+               res: Response,
+               next: NextFunction) {
       // Cache based on full URL. This means requests with different params are
       // cached separately.
-      const key = this.datastore.key(['Page', ctx.url]);
+      const key = this.datastore.key(['Page', req.url]);
       const results = await this.datastore.get(key);
 
       if (results.length && results[0] !== undefined) {
         const content = results[0] as CacheContent;
         // Serve cached content if its not expired.
         if (content.expires.getTime() >= new Date().getTime()) {
-          const headers = JSON.parse(content.headers);
-          ctx.set(headers);
-          ctx.set('x-rendertron-cached', content.saved.toUTCString());
+          const headers = JSON.parse(content.headers) as Headers;
+          Object.entries(headers).forEach(([key, value]) => {
+            if (value !== undefined) res.set(key, value);
+          });
+          res.set('x-rendertron-cached', content.saved.toUTCString());
           try {
             let payload = JSON.parse(content.payload);
             if (payload && typeof (payload) === 'object' &&
                 payload.type === 'Buffer') {
-              payload = new Buffer(payload);
+              payload = Buffer.from(payload);
             }
-            ctx.body = payload;
+            res.send(payload);
             return;
           } catch (error) {
             console.log(
@@ -115,8 +119,12 @@ export class DatastoreCache {
 
       await next();
 
-      if (ctx.status === 200) {
-        cacheContent(key, ctx.response.headers, ctx.body);
+      if (res.statusCode === 200) {
+        const responseBody = (res as any).body;
+        if (responseBody) {
+          const headers = res.getHeaders() as Headers;
+          cacheContent(key, headers, Buffer.from(responseBody));
+        }
       }
     }.bind(this);
   }

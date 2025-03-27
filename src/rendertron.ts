@@ -1,25 +1,23 @@
-import * as Koa from 'koa';
-import * as bodyParser from 'koa-bodyparser';
-import * as koaCompress from 'koa-compress';
-import * as route from 'koa-route';
-import * as koaSend from 'koa-send';
-import * as koaLogger from 'koa-logger';
-import * as path from 'path';
-import * as puppeteer from 'puppeteer';
-import * as url from 'url';
+import express from 'express';
+import compression from 'compression';
+import morgan from 'morgan';
+import helmet from 'helmet';
+import path from 'path';
+import puppeteer from 'puppeteer';
 
 import {Renderer, ScreenshotError} from './renderer';
 import {Config, ConfigManager} from './config';
+import {AuthMiddleware} from './auth-middleware';
 
 /**
  * Rendertron rendering service. This runs the server which routes rendering
  * requests through to the renderer.
  */
 export class Rendertron {
-  app: Koa = new Koa();
+  app: express.Application = express();
   private config: Config = ConfigManager.config;
   private renderer: Renderer|undefined;
-  private port = process.env.PORT;
+  private port = process.env.PORT ? parseInt(process.env.PORT, 10) : undefined;
 
   async initialize() {
     // Load config
@@ -27,21 +25,45 @@ export class Rendertron {
 
     this.port = this.port || this.config.port;
 
-    const browser = await puppeteer.launch({args: ['--no-sandbox']});
+    const browser = await puppeteer.launch({
+      args: this.config.puppeteerArgs,
+      headless: true,
+      ignoreHTTPSErrors: true
+    });
     this.renderer = new Renderer(browser, this.config);
 
-    this.app.use(koaLogger());
-
-    this.app.use(koaCompress());
-
-    this.app.use(bodyParser());
-
-    this.app.use(route.get('/', async (ctx: Koa.Context) => {
-      await koaSend(
-        ctx, 'index.html', { root: path.resolve(__dirname, '../src') });
+    // Security middleware
+    this.app.use(helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", "data:", "https:"],
+          connectSrc: ["'self'", "https:"],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: { policy: "cross-origin" }
     }));
-    this.app.use(
-      route.get('/_ah/health', (ctx: Koa.Context) => ctx.body = 'OK'));
+
+    // Other middleware
+    this.app.use(morgan('dev'));
+    this.app.use(compression());
+    this.app.use(express.json());
+
+    // Add authentication middleware
+    const authMiddleware = new AuthMiddleware(this.config);
+    this.app.use(authMiddleware.middleware());
+
+    // Routes
+    this.app.get('/', (_req, res) => {
+      res.sendFile(path.resolve(__dirname, '../src/index.html'));
+    });
+
+    this.app.get('/_ah/health', (_req, res) => {
+      res.send('OK');
+    });
 
     // Optionally enable cache for rendering requests.
     if (this.config.datastoreCache) {
@@ -49,12 +71,10 @@ export class Rendertron {
       this.app.use(new DatastoreCache().middleware());
     }
 
-    this.app.use(
-      route.get('/render/:url(.*)', this.handleRenderRequest.bind(this)));
-    this.app.use(route.get(
-      '/screenshot/:url(.*)', this.handleScreenshotRequest.bind(this)));
-    this.app.use(route.post(
-      '/screenshot/:url(.*)', this.handleScreenshotRequest.bind(this)));
+    // API routes
+    this.app.get('/render/*', this.handleRenderRequest.bind(this));
+    this.app.get('/screenshot/*', this.handleScreenshotRequest.bind(this));
+    this.app.post('/screenshot/*', this.handleScreenshotRequest.bind(this));
 
     return this.app.listen(this.port, () => {
       console.log(`Listening on port ${this.port}`);
@@ -66,66 +86,85 @@ export class Rendertron {
    * the requester to read the file system via Chrome.
    */
   restricted(href: string): boolean {
-    const parsedUrl = url.parse(href);
-    const protocol = parsedUrl.protocol || '';
-
-    if (!protocol.match(/^https?/)) {
+    try {
+      const parsedUrl = new URL(href);
+      return !parsedUrl.protocol.match(/^https?:/);
+    } catch (e) {
       return true;
     }
-
-    return false;
   }
 
-  async handleRenderRequest(ctx: Koa.Context, url: string) {
+  async handleRenderRequest(req: express.Request, res: express.Response) {
     if (!this.renderer) {
       throw (new Error('No renderer initalized yet.'));
     }
 
+    const url = req.params[0];
     if (this.restricted(url)) {
-      ctx.status = 403;
+      res.status(403).send('Forbidden');
       return;
     }
 
-    const mobileVersion = 'mobile' in ctx.query ? true : false;
+    const mobileVersion = 'mobile' in req.query;
 
-    const serialized = await this.renderer.serialize(url, mobileVersion);
-    // Mark the response as coming from Rendertron.
-    ctx.set('x-renderer', 'rendertron');
-    ctx.status = serialized.status;
-    ctx.body = serialized.content;
+    try {
+      console.log(`Rendering URL: ${url}`);
+      const serialized = await this.renderer.serialize(url, mobileVersion);
+      
+      if (!serialized || !serialized.content) {
+        console.error('No content received from renderer');
+        res.status(500).send('Failed to render page: No content received');
+        return;
+      }
+
+      // Set response headers
+      if (serialized.headers) {
+        Object.entries(serialized.headers).forEach(([key, value]) => {
+          res.set(key, value);
+        });
+      }
+
+      // Mark the response as coming from Rendertron
+      res.set('x-renderer', 'rendertron');
+      res.status(serialized.status).send(serialized.content);
+    } catch (error: any) {
+      console.error('Error handling render request:', error);
+      res.status(500).send(`Failed to render page: ${error.message || 'Unknown error'}`);
+    }
   }
 
-  async handleScreenshotRequest(ctx: Koa.Context, url: string) {
+  async handleScreenshotRequest(req: express.Request, res: express.Response) {
     if (!this.renderer) {
       throw (new Error('No renderer initalized yet.'));
     }
 
+    const url = req.params[0];
     if (this.restricted(url)) {
-      ctx.status = 403;
+      res.status(403).send('Forbidden');
       return;
     }
 
     let options = undefined;
-    if (ctx.method === 'POST' && ctx.request.body) {
-      options = ctx.request.body;
+    if (req.method === 'POST' && req.body) {
+      options = req.body;
     }
 
     const dimensions = {
-      width: Number(ctx.query['width']) || this.config.width,
-      height: Number(ctx.query['height']) || this.config.height
+      width: Number(req.query['width']) || this.config.width,
+      height: Number(req.query['height']) || this.config.height
     };
 
-    const mobileVersion = 'mobile' in ctx.query ? true : false;
+    const mobileVersion = 'mobile' in req.query;
 
     try {
       const img = await this.renderer.screenshot(
         url, mobileVersion, dimensions, options);
-      ctx.set('Content-Type', 'image/jpeg');
-      ctx.set('Content-Length', img.length.toString());
-      ctx.body = img;
+      res.set('Content-Type', 'image/jpeg');
+      res.set('Content-Length', img.length.toString());
+      res.send(img);
     } catch (error) {
       const err = error as ScreenshotError;
-      ctx.status = err.type === 'Forbidden' ? 403 : 500;
+      res.status(err.type === 'Forbidden' ? 403 : 500).send(err.message);
     }
   }
 }

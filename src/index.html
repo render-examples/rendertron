@@ -158,6 +158,24 @@ the License.
       box-shadow: #99f3ff 0px 0px 7px 4px;
     }
 
+    .api-info {
+      color: white;
+      background: rgba(0, 0, 0, 0.7);
+      max-width: 664px;
+      padding: 20px;
+      margin-top: 20px;
+      border: 1px solid #99f3ff;
+      border-radius: 5px;
+    }
+
+    .code {
+      background: #333;
+      padding: 10px;
+      border-radius: 3px;
+      font-family: monospace;
+      overflow-x: auto;
+    }
+
     @media (max-width: 500px) {
       h1 {
         font-size: 40px;
@@ -168,6 +186,14 @@ the License.
 
 <body>
   <h1>Rendertron</h1>
+
+  <div class="api-info">
+    <h3>API Key Required</h3>
+    <p>All API requests require an API key in the <code>x-api-key</code> header.</p>
+    <p>For development: <code>3OB0DLraW0qdJsUFwaVVqOoXNZtmzj1C</code></p>
+    <p>Example curl request:</p>
+    <div class="code">curl -H "x-api-key: 3OB0DLraW0qdJsUFwaVVqOoXNZtmzj1C" http://localhost:3000/render/https://example.com</div>
+  </div>
 
   <div id="search-bar">
     <input id="url" type="url" placeholder="Enter a URL" autocapitalize="off" spellcheck="false">
